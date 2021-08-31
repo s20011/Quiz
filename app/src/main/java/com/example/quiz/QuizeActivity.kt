@@ -4,6 +4,7 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.appcompat.app.AlertDialog
 import com.example.quiz.databinding.ActivityQuizeBinding
 import com.opencsv.CSVIterator
@@ -18,18 +19,21 @@ class QuizeActivity : AppCompatActivity() {
     var countTime = 0 // かかった時間
     var correct = 0 //正解した問題数
     val quizeList: MutableList<Array<String>> = mutableListOf()
+    var n: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityQuizeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val mode = intent.getIntExtra("MODE", 11)
+        binding.timerText.text = "${mode.toString()}"
 
-        binding.timerText.text = "11"
-
+        n = if(mode == 11){
+            11L
+        }else 6L
 
 
         val fileReader = BufferedReader(InputStreamReader(assets.open("s20011.csv")))
-
         val csvIter = CSVIterator(CSVReader(fileReader))
         for(row in csvIter){
             if(row == null) break
@@ -63,6 +67,7 @@ class QuizeActivity : AppCompatActivity() {
             quizeCount++
         }
 
+
     }
 
     val timer = object : CountDownTimer(11 * 1000, 1000){
@@ -88,6 +93,42 @@ class QuizeActivity : AppCompatActivity() {
                 time = 10 - binding.timerText.text.toString().toInt()
                 countTime += time
                 quizeCount++
+                Log.d("mode=", "${n}")
+                AlertDialog.Builder(this@QuizeActivity)
+                    .setTitle("結果")
+                    .setMessage("不正解　✕")
+                    .setPositiveButton("次へ", { dialog, which ->
+                        gameStart(quizeList)
+                    })
+                    .show()
+            }
+        }
+    }
+
+    val timer_6s = object : CountDownTimer(6 * 1000, 1000){
+        override fun onTick(millisUntilFinished: Long) {
+            val second = millisUntilFinished / 1000L
+            binding.timerText.text = "%1d".format(second)
+        }
+
+        override fun onFinish() {
+            binding.timerText.text = "0"
+            var time: Int
+            if(quizeCount == 9){
+                time = 10 - binding.timerText.text.toString().toInt()
+                countTime += time
+                AlertDialog.Builder(this@QuizeActivity)
+                    .setTitle("ゲーム終了")
+                    .setMessage("＊＊＊＊＊＊＊＊＊＊")
+                    .setPositiveButton("結果画面", { dialog, which ->
+                        resActivity()
+                    })
+                    .show()
+            }else{
+                time = 10 - binding.timerText.text.toString().toInt()
+                countTime += time
+                quizeCount++
+                Log.d("mode=", "${n}")
                 AlertDialog.Builder(this@QuizeActivity)
                     .setTitle("結果")
                     .setMessage("不正解　✕")
@@ -117,7 +158,11 @@ class QuizeActivity : AppCompatActivity() {
         binding.s3.text = choices[2]
         binding.s4.text = choices[3]
 
-        timer.start()
+
+        when(n){
+            11L -> timer.start()
+            6L -> timer_6s.start()
+        }
 
         //val timer = MyCountDownTimer(11 * 1000, 100)
         //timer.start()
@@ -127,7 +172,10 @@ class QuizeActivity : AppCompatActivity() {
 
     //ダイアログを表示する
     fun Alert(count:Int, Answer:String,quize: MutableList<Array<String>>){
-        timer.cancel() //タイマーを止める
+        when(n){   //タイマーを止める
+            11L -> timer.cancel()
+            6L -> timer_6s.cancel()
+        }
         val time = 10 - binding.timerText.text.toString().toInt() // かかった時間
         countTime += time
         if(count == 9){
@@ -163,6 +211,7 @@ class QuizeActivity : AppCompatActivity() {
         val intent = Intent(this@QuizeActivity,ResultActivity::class.java)
         intent.putExtra("COUNT_TIME",countTime)
         intent.putExtra("CORRECT",correct)
+        intent.putExtra("MODE",n)
         startActivity(intent)
 
     }
