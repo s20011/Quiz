@@ -159,10 +159,7 @@ class QuizeActivity : AppCompatActivity() {
         binding.s4.text = choices[3]
 
 
-        when(n){
-            11L -> timer.start()
-            6L -> timer_6s.start()
-        }
+        timerStart(n)
 
         //val timer = MyCountDownTimer(11 * 1000, 100)
         //timer.start()
@@ -172,10 +169,8 @@ class QuizeActivity : AppCompatActivity() {
 
     //ダイアログを表示する
     fun Alert(count:Int, Answer:String,quize: MutableList<Array<String>>){
-        when(n){   //タイマーを止める
-            11L -> timer.cancel()
-            6L -> timer_6s.cancel()
-        }
+        timerCansel(n) //タイマーを止める
+
         val time = 10 - binding.timerText.text.toString().toInt() // かかった時間
         countTime += time
         if(count == 9){
@@ -214,6 +209,20 @@ class QuizeActivity : AppCompatActivity() {
         intent.putExtra("MODE",n)
         startActivity(intent)
 
+    }
+
+    fun timerStart(n:Long){
+        when(n){
+            11L -> timer.start()
+            6L -> timer_6s.start()
+        }
+    }
+
+    fun timerCansel(n:Long){
+        when(n){
+            11L -> timer.cancel()
+            6L -> timer_6s.cancel()
+        }
     }
 
 }
