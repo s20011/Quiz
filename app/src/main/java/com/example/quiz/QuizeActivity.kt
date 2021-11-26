@@ -9,12 +9,19 @@ import androidx.appcompat.app.AlertDialog
 import com.example.quiz.databinding.ActivityQuizeBinding
 import com.opencsv.CSVIterator
 import com.opencsv.CSVReader
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class QuizeActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityQuizeBinding
 
+    companion object {
+        val KEY_STATE = "key_state"
+    }
+
+    private lateinit var binding: ActivityQuizeBinding
     var quizeCount = 0 // 何問目かの値を持っている
     var countTime = 0 // かかった時間
     var correct = 0 //正解した問題数
@@ -207,7 +214,9 @@ class QuizeActivity : AppCompatActivity() {
         intent.putExtra("COUNT_TIME",countTime)
         intent.putExtra("CORRECT",correct)
         intent.putExtra("MODE",n)
+
         startActivity(intent)
+        finish()
 
     }
 
@@ -224,6 +233,8 @@ class QuizeActivity : AppCompatActivity() {
             6L -> timer_6s.cancel()
         }
     }
+
+
 
 }
 

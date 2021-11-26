@@ -47,6 +47,7 @@ class ResultActivity : AppCompatActivity() {
         binding.main.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+            finish()
         }
 
     }
