@@ -9,17 +9,12 @@ import androidx.appcompat.app.AlertDialog
 import com.example.quiz.databinding.ActivityQuizeBinding
 import com.opencsv.CSVIterator
 import com.opencsv.CSVReader
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class QuizeActivity : AppCompatActivity() {
-
-    companion object {
-        val KEY_STATE = "key_state"
-    }
+    private val helper = DatabaseHelper(this@QuizeActivity)
+    private val quiz: ArrayList<Quize> = arrayListOf()
 
     private lateinit var binding: ActivityQuizeBinding
     var quizeCount = 0 // 何問目かの値を持っている
@@ -33,12 +28,13 @@ class QuizeActivity : AppCompatActivity() {
         binding = ActivityQuizeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         val mode = intent.getIntExtra("MODE", 11)
-        binding.timerText.text = "${mode.toString()}"
+        binding.timerText.text = "${mode}"
 
         n = if(mode == 11){
             11L
         }else 6L
 
+        createQuizList(dbCount())
 
         val fileReader = BufferedReader(InputStreamReader(assets.open("s20011.csv")))
         val csvIter = CSVIterator(CSVReader(fileReader))
@@ -85,9 +81,8 @@ class QuizeActivity : AppCompatActivity() {
 
         override fun onFinish() {
             binding.timerText.text = "0"
-            var time: Int
             if(quizeCount == 9){
-                time = 10 - binding.timerText.text.toString().toInt()
+                val time = 10 - binding.timerText.text.toString().toInt()
                 countTime += time
                 AlertDialog.Builder(this@QuizeActivity)
                     .setTitle("ゲーム終了")
@@ -97,7 +92,7 @@ class QuizeActivity : AppCompatActivity() {
                     })
                     .show()
             }else{
-                time = 10 - binding.timerText.text.toString().toInt()
+                val time = 10 - binding.timerText.text.toString().toInt()
                 countTime += time
                 quizeCount++
                 Log.d("mode=", "${n}")
@@ -120,9 +115,8 @@ class QuizeActivity : AppCompatActivity() {
 
         override fun onFinish() {
             binding.timerText.text = "0"
-            var time: Int
             if(quizeCount == 9){
-                time = 10 - binding.timerText.text.toString().toInt()
+                val time = 10 - binding.timerText.text.toString().toInt()
                 countTime += time
                 AlertDialog.Builder(this@QuizeActivity)
                     .setTitle("ゲーム終了")
@@ -132,7 +126,7 @@ class QuizeActivity : AppCompatActivity() {
                     })
                     .show()
             }else{
-                time = 10 - binding.timerText.text.toString().toInt()
+                val time = 10 - binding.timerText.text.toString().toInt()
                 countTime += time
                 quizeCount++
                 Log.d("mode=", "${n}")
@@ -150,7 +144,7 @@ class QuizeActivity : AppCompatActivity() {
     //クイズをスタートする
     fun gameStart(quize: MutableList<Array<String>>){
         binding.quize.text = "${quizeCount + 1}問目：　${quize[quizeCount][0]}"
-        var choices: MutableList<String> = mutableListOf()
+        val choices: MutableList<String> = mutableListOf()
         for(i in 2..5){
             choices.add(quize[quizeCount][i])
         }
@@ -209,11 +203,13 @@ class QuizeActivity : AppCompatActivity() {
         }
     }
 
+    val map: ArrayList<Quize> = arrayListOf<Quize>()
     fun resActivity(){
         val intent = Intent(this@QuizeActivity,ResultActivity::class.java)
         intent.putExtra("COUNT_TIME",countTime)
         intent.putExtra("CORRECT",correct)
         intent.putExtra("MODE",n)
+        intent.putExtra(ResultActivity.KEY, map)
 
         startActivity(intent)
         finish()
@@ -232,6 +228,62 @@ class QuizeActivity : AppCompatActivity() {
             11L -> timer.cancel()
             6L -> timer_6s.cancel()
         }
+    }
+
+    private fun createQuizList(n:Int){
+        val db = helper.writableDatabase
+        val randomList = mutableListOf<Int>()
+
+        while (randomList.size < 10) {
+            val random = (1..n).random()
+            randomList.add(random)
+        }
+
+        Log.d("QuizActivity", "randomList = ${println(randomList)}")
+
+        for(i in randomList){
+            val sqlSelect = "SELECT * FROM quiz WHERE _id = ${i}"
+            val cursor = db.rawQuery(sqlSelect, null)
+            while(cursor.moveToNext()){
+                cursor.let {
+                    quiz.add(
+                        Quize(
+                            id = it.getInt(it.getColumnIndex("_id")),
+                            question = it.getString(it.getColumnIndex("question")),
+                            answers = it.getInt(it.getColumnIndex("answers")),
+                            choices = mutableListOf<String>(
+                                it.getString(it.getColumnIndex("choicei")),
+                                it.getString(it.getColumnIndex("choiceii")),
+                                it.getString(it.getColumnIndex("choiceiii")),
+                                it.getString(it.getColumnIndex("choiceiv")),
+                                it.getString(it.getColumnIndex("choicev")),
+                                it.getString(it.getColumnIndex("choicevi"))
+                            )
+                        )
+                    )
+                }
+            }
+            cursor.close()
+        }
+
+        Log.d("QuizActivity", "quiz = ${println(quiz)}")
+    }
+
+    private fun dbCount():Int {
+        val db = helper.readableDatabase
+        val sqlCount = "SELECT COUNT(_id) AS count FROM quiz"
+        val cursor = db.rawQuery(sqlCount, null)
+        var count = 0
+        if(cursor.moveToFirst()) {
+            cursor.let {
+                val index = cursor.getColumnIndex("count")
+                count = cursor.getInt(index)
+            Log.d("QuizActivity", "COUNT = ${cursor.getInt(index)}")
+            }
+        }
+        cursor.close()
+
+        return count
     }
 
 

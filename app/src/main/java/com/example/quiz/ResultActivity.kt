@@ -6,6 +6,10 @@ import android.os.Bundle
 import com.example.quiz.databinding.ActivityResultBinding
 
 class ResultActivity : AppCompatActivity() {
+
+    companion object {
+        val KEY = "key"
+    }
     private lateinit var binding: ActivityResultBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

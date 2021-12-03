@@ -17,7 +17,7 @@
             android:exported="false" />
         <activity android:name=".ResultActivity" />
         <activity android:name=".QuizeActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name="com.example.quiz.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

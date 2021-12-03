@@ -8,16 +8,18 @@ import retrofit2.http.GET
 
 interface QuizeService {
     @GET("exec?f=data")
-    fun getQuizeProperties():
+    fun getQuizProperties():
             Call<List<Quize>>
 }
 
 fun createService(): QuizeService{
-    val BASE_URL = "https://script.google.com/macros/s/AKfycbznWpk2m8q6lbLWSS6qaz3uS6j3L4zPwv7CqDEiC433YOgAdaFekGJmjoAO60quMg6l/"
+    val URL = """https://script.google.com/macros/s/
+        |AKfycbznWpk2m8q6lbLWSS6qaz3uS6j3L4zPwv7CqDEiC
+        |433YOgAdaFekGJmjoAO60quMg6l/""".trimMargin()
 
     val retrofit = Retrofit.Builder()
         .addConverterFactory(MoshiConverterFactory.create())
-        .baseUrl(BASE_URL)
+        .baseUrl(URL)
         .build()
 
     return retrofit.create(QuizeService::class.java)

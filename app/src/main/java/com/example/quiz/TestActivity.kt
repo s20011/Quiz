@@ -11,6 +11,11 @@ import retrofit2.Response
 class TestActivity : AppCompatActivity() {
     private lateinit var binding: ActivityTestBinding
     //private val quizeService by lazy { createService() }
+    private lateinit var quiz: ArrayList<Quize>
+
+    companion object {
+        val KEY_STATE = "key_state"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,9 +24,10 @@ class TestActivity : AppCompatActivity() {
 
         //fetchQuizeData()
 
+        quiz = intent.getSerializableExtra(KEY_STATE) as ArrayList<Quize>
         val question = intent.getStringExtra("question")
         Log.d("intent", "getIntent")
-        binding.testText.text = question
+        binding.testText.text = quiz.toString()
     }
 
     /*private fun fetchQuizeData() {
