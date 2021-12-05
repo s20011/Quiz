@@ -1,27 +1,26 @@
 package com.example.quiz
 
 import android.content.Intent
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
 import androidx.appcompat.app.AlertDialog
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.quiz.databinding.ActivityQuizeBinding
-import com.opencsv.CSVIterator
-import com.opencsv.CSVReader
-import java.io.BufferedReader
-import java.io.InputStreamReader
 
 class QuizeActivity : AppCompatActivity() {
     private val helper = DatabaseHelper(this@QuizeActivity)
-    private val quiz: ArrayList<Quize> = arrayListOf()
+    private val quiz = arrayListOf<Quize>()
 
     private lateinit var binding: ActivityQuizeBinding
     var quizeCount = 0 // 何問目かの値を持っている
     var countTime = 0 // かかった時間
     var correct = 0 //正解した問題数
-    val quizeList: MutableList<Array<String>> = mutableListOf()
     var n: Long = 0
+    val select = mutableListOf<String>() //ユーザーが選んだ答え
+    val answer = mutableListOf<String>() //問題の答え
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,40 +35,14 @@ class QuizeActivity : AppCompatActivity() {
 
         createQuizList(dbCount())
 
-        val fileReader = BufferedReader(InputStreamReader(assets.open("s20011.csv")))
-        val csvIter = CSVIterator(CSVReader(fileReader))
-        for(row in csvIter){
-            if(row == null) break
+        gameStart(quiz)
 
-            row.toString().split(",").toTypedArray()
-            quizeList.add(row)
-        }
-        quizeList.removeAt(0)
-
-        gameStart(quizeList)
-
-        binding.s1.setOnClickListener {
-            val answer = binding.s1.text.toString()
-            Alert(quizeCount,answer,quizeList)
-            quizeCount++
-
-        }
-        binding.s2.setOnClickListener {
-            val answer = binding.s2.text.toString()
-            Alert(quizeCount,answer,quizeList)
+        binding.nextbt.setOnClickListener {
+            Log.d("QuizActivity", "nextButton")
+            Alert(quizeCount, answer, select)
+            Log.d("QuizActivity", "uerSelect = ${println(select)}")
             quizeCount++
         }
-        binding.s3.setOnClickListener {
-            val answer = binding.s3.text.toString()
-            Alert(quizeCount,answer,quizeList)
-            quizeCount++
-        }
-        binding.s4.setOnClickListener {
-            val answer = binding.s4.text.toString()
-            Alert(quizeCount,answer,quizeList)
-            quizeCount++
-        }
-
 
     }
 
@@ -100,7 +73,7 @@ class QuizeActivity : AppCompatActivity() {
                     .setTitle("結果")
                     .setMessage("不正解　✕")
                     .setPositiveButton("次へ", { dialog, which ->
-                        gameStart(quizeList)
+                        gameStart(quiz)
                     })
                     .show()
             }
@@ -116,7 +89,7 @@ class QuizeActivity : AppCompatActivity() {
         override fun onFinish() {
             binding.timerText.text = "0"
             if(quizeCount == 9){
-                val time = 10 - binding.timerText.text.toString().toInt()
+                val time = 5 - binding.timerText.text.toString().toInt()
                 countTime += time
                 AlertDialog.Builder(this@QuizeActivity)
                     .setTitle("ゲーム終了")
@@ -126,7 +99,7 @@ class QuizeActivity : AppCompatActivity() {
                     })
                     .show()
             }else{
-                val time = 10 - binding.timerText.text.toString().toInt()
+                val time = 5 - binding.timerText.text.toString().toInt()
                 countTime += time
                 quizeCount++
                 Log.d("mode=", "${n}")
@@ -134,7 +107,7 @@ class QuizeActivity : AppCompatActivity() {
                     .setTitle("結果")
                     .setMessage("不正解　✕")
                     .setPositiveButton("次へ", { dialog, which ->
-                        gameStart(quizeList)
+                        gameStart(quiz)
                     })
                     .show()
             }
@@ -142,74 +115,125 @@ class QuizeActivity : AppCompatActivity() {
     }
 
     //クイズをスタートする
-    fun gameStart(quize: MutableList<Array<String>>){
-        binding.quize.text = "${quizeCount + 1}問目：　${quize[quizeCount][0]}"
+    fun gameStart(quiz: ArrayList<Quize>){
+        binding.quize.text = "${quizeCount + 1}問目：　${quiz[quizeCount].question}"
+        select.clear()
+        answer.clear()
+
         val choices: MutableList<String> = mutableListOf()
-        for(i in 2..5){
-            choices.add(quize[quizeCount][i])
+        for(i in quiz[quizeCount].choices){
+            if(i != ""){
+                choices.add(i)
+            }
         }
 
-        if(quize[quizeCount][1] == ""){
-            binding.quizeImage.setImageResource(R.drawable.quize)
+        val answers = quiz[quizeCount].answers
+        if(answers == 1){
+            answer.add(choices[0])
+        }else {
+            answer.let {
+                it.add(choices[0])
+                it.add(choices[1])
+            }
+
         }
 
         choices.shuffle()
-        binding.s1.text = choices[0]
-        binding.s2.text = choices[1]
-        binding.s3.text = choices[2]
-        binding.s4.text = choices[3]
+
+        Log.d("QuizActivity", "question = ${quiz[quizeCount].question}")
+        Log.d("QuizActivity", "answer = ${println(answer)}")
+        Log.d("QuizActivity", "choices = ${println(choices)}")
+
+
+        val adapter = RecyclerAdapter(choices)
+        val manager = LinearLayoutManager(this@QuizeActivity)
+        //RecyclerViewのクリック処理
+        adapter.itemClickListener = object : RecyclerAdapter.OnItemClickListener{
+            override fun onItemClick(holder: RecyclerAdapter.ViewHolder) {
+                //val position = holder.bindingAdapterPosition
+                val choice = holder.choiceView.text.toString()
+                if(choice in select){
+                    holder.row.setBackgroundColor(Color.WHITE)
+                    select.remove(choice)
+                    Log.d("QuzieActivity", "select = ${println(select)}")
+                }else if(select.size == quiz[quizeCount].answers){
+                    if(choice in select){
+                        holder.row.setBackgroundColor(Color.WHITE)
+                        select.remove(choice)
+                        Log.d("QuzieActivity", "select = ${println(select)}")
+                    }else {
+                        Log.d("QuizeActivity", "msg = can not Select")
+                        Log.d("QuzieActivity", "select = ${println(select)}")
+                    }
+                }else {
+                    holder.row.setBackgroundColor(Color.RED)
+                    select.add(choice)
+                    Log.d("QuzieActivity", "select = ${println(select)}")
+                }
+            }
+        }
+
+        binding.lvMenu.let {
+            it.adapter = adapter
+            manager.orientation = LinearLayoutManager.VERTICAL
+            it.layoutManager = manager
+        }
 
 
         timerStart(n)
-
-        //val timer = MyCountDownTimer(11 * 1000, 100)
-        //timer.start()
-
     }
 
 
     //ダイアログを表示する
-    fun Alert(count:Int, Answer:String,quize: MutableList<Array<String>>){
+    private fun Alert(count:Int,Answer:MutableList<String>,select: MutableList<String>){
         timerCansel(n) //タイマーを止める
+        val limit = n.toInt() - 1
 
-        val time = 10 - binding.timerText.text.toString().toInt() // かかった時間
+
+        var corNum = 0
+        for(i in Answer){
+            if(i in select){
+                corNum++
+            }
+        }
+
+        val time = limit - binding.timerText.text.toString().toInt() // かかった時間
         countTime += time
         if(count == 9){
             AlertDialog.Builder(this)
                 .setTitle("ゲーム終了")
                 .setMessage("＊＊＊＊＊＊＊＊＊＊")
-                .setPositiveButton("結果画面", { dialog, which ->
+                .setPositiveButton("結果画面", { _, _ ->
                     resActivity()
                 })
                 .show()
-        }else if(Answer == quize[quizeCount][2]){
-            correct++
-            AlertDialog.Builder(this)
+
+        }else if(corNum == Answer.size){
+            AlertDialog.Builder(this@QuizeActivity)
                 .setTitle("結果")
                 .setMessage("正解　◎")
                 .setPositiveButton("次へ", { dialog, which ->
-                    gameStart(quize)
-                })
-                .show()
+                    gameStart(quiz)
+                }).show()
 
         }else {
-            AlertDialog.Builder(this)
+            AlertDialog.Builder(this@QuizeActivity)
                 .setTitle("結果")
                 .setMessage("不正解　✕")
                 .setPositiveButton("次へ", { dialog, which ->
-                    gameStart(quize)
-                })
-                .show()
+                    gameStart(quiz)
+                }).show()
         }
+
+
+
     }
 
-    val map: ArrayList<Quize> = arrayListOf<Quize>()
     fun resActivity(){
         val intent = Intent(this@QuizeActivity,ResultActivity::class.java)
         intent.putExtra("COUNT_TIME",countTime)
         intent.putExtra("CORRECT",correct)
         intent.putExtra("MODE",n)
-        intent.putExtra(ResultActivity.KEY, map)
 
         startActivity(intent)
         finish()

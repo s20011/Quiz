@@ -6,10 +6,6 @@ import android.os.Bundle
 import com.example.quiz.databinding.ActivityResultBinding
 
 class ResultActivity : AppCompatActivity() {
-
-    companion object {
-        val KEY = "key"
-    }
     private lateinit var binding: ActivityResultBinding
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,16 +33,16 @@ class ResultActivity : AppCompatActivity() {
             "D"
         }
 
-        val modemess = when(mode){
+        val modemsg = when(mode){
             11L -> "ノーマルモード"
             6L -> "5秒モード"
             else -> ""
         }
 
-        binding.correct.text = "正解した問題数：10問中${correct.toString()}正解"
-        binding.time.text = "かかった時間：${countTime.toString()}秒"
-        binding.rank.text = "RANK: ${rank}"
-        binding.mode.text = modemess
+        binding.correct.text = "10問中${correct}正解"
+        binding.time.text = "${countTime}秒"
+        binding.rank.text = rank
+        binding.mode.text = modemsg
 
         binding.main.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)

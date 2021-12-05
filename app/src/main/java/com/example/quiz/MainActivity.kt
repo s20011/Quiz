@@ -34,13 +34,6 @@ class MainActivity : AppCompatActivity() {
             quizActivity(6)
         }
 
-        binding.test.setOnClickListener {
-            val testActivity = Intent(this@MainActivity, TestActivity::class.java)
-            startActivity(testActivity)
-
-        }
-
-
     }
 
     override fun onDestroy() {

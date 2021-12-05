@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Quiz</string>
+    <string name="title_activity_result2">結果</string>
+    <string name="next">次へ</string>
+    <string name="previous">Previous</string>
+    <string name="start">スタート</string>
+    <string name="second5">5秒モード</string>
+    <string name="retry">もう一度</string>
+    <string name="correct">正解した問題数：</string>
+    <string name="time">時間：</string>
+    <string name="rank">RANK：</string>
+    <string name="todo">TODO</string>
+</resources>
